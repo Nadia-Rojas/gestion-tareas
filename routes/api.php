@@ -1,19 +1,17 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\RolController;
+use App\Http\Controllers\EstadoController;
+use App\Http\Controllers\PrioridadController;
+use App\Http\Controllers\TareaController;
+use App\Http\Controllers\HistorialCambioController;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
-*/
+Route::apiResource('usuarios', UsuarioController::class);
+Route::apiResource('roles', RolController::class);
+Route::apiResource('estados', EstadoController::class);
+Route::apiResource('prioridades', PrioridadController::class);
+Route::apiResource('tareas', TareaController::class);
+Route::apiResource('historial-cambios', HistorialCambioController::class);
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});

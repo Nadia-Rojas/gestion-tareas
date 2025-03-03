@@ -2,10 +2,35 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Tarea extends Model
 {
-    use HasFactory;
+    protected $fillable = ['titulo', 'descripcion', 'estado_id', 'prioridad_id', 'creador_id'];
+
+    // Relación muchos a muchos con Usuario
+    public function usuarios()
+    {
+        return $this->belongsToMany(Usuario::class, 'tarea_usuarios')
+                    ->withPivot('completado')
+                    ->withTimestamps();
+    }
+
+    // Relación uno a muchos inversa con Estado
+    public function estado()
+    {
+        return $this->belongsTo(Estado::class);
+    }
+
+    // Relación uno a muchos inversa con Prioridad
+    public function prioridad()
+    {
+        return $this->belongsTo(Prioridad::class);
+    }
+
+    // Relación uno a muchos inversa con Usuario (creador)
+    public function creador()
+    {
+        return $this->belongsTo(Usuario::class, 'creador_id');
+    }
 }
