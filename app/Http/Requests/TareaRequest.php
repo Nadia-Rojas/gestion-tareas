@@ -6,24 +6,19 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class TareaRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize()
     {
-        return true;  // Asegúrate de cambiar esto si hay lógica de autorización
+        return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     */
     public function rules()
     {
         return [
-            'nombre' => 'required|string|max:255',
-            'descripcion' => 'required|string',
-            'prioridad' => 'required|string|in:baja,media,alta',
-            'estado' => 'required|string|in:pendiente,en progreso,completada',
+            'titulo' => 'required|string|max:255',
+            'descripcion' => 'nullable|string',
+            'estado_id' => 'required|exists:estados,id',
+            'prioridad_id' => 'required|exists:prioridades,id',
+            'creador_id' => 'required|exists:usuarios,id',
         ];
     }
 }
