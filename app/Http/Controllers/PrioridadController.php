@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Prioridad;  // Importar el modelo Prioridad
 use Illuminate\Http\Request;
 
 class PrioridadController extends Controller
@@ -11,7 +12,8 @@ class PrioridadController extends Controller
      */
     public function index()
     {
-        //
+        // Puedes devolver todas las prioridades si lo necesitas
+        return Prioridad::all();
     }
 
     /**
@@ -19,7 +21,18 @@ class PrioridadController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // Validar los datos recibidos
+        $validated = $request->validate([
+            'descripcion' => 'required|string|max:255',  // Validación de la descripción
+        ]);
+
+        // Crear la nueva prioridad
+        $prioridad = Prioridad::create([
+            'descripcion' => $validated['descripcion'],
+        ]);
+
+        // Devolver la prioridad recién creada como respuesta
+        return response()->json($prioridad, 201);
     }
 
     /**
@@ -27,7 +40,8 @@ class PrioridadController extends Controller
      */
     public function show(string $id)
     {
-        //
+        // Mostrar una prioridad específica por su ID
+        return Prioridad::findOrFail($id);
     }
 
     /**
@@ -35,7 +49,17 @@ class PrioridadController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        // Validar los datos recibidos
+        $validated = $request->validate([
+            'descripcion' => 'required|string|max:255',  // Validación de la descripción
+        ]);
+
+        // Buscar la prioridad y actualizarla
+        $prioridad = Prioridad::findOrFail($id);
+        $prioridad->update($validated);
+
+        // Devolver la prioridad actualizada
+        return response()->json($prioridad, 200);
     }
 
     /**
@@ -43,6 +67,12 @@ class PrioridadController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        // Eliminar una prioridad específica por su ID
+        $prioridad = Prioridad::findOrFail($id);
+        $prioridad->delete();
+
+        // Responder con un mensaje de éxito
+        return response()->json(['message' => 'Prioridad eliminada con éxito'], 200);
     }
 }
+

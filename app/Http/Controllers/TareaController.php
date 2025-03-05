@@ -6,6 +6,7 @@ use App\Models\Tarea;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\TareaRequest;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class TareaController extends Controller
 {
@@ -14,8 +15,13 @@ class TareaController extends Controller
      */
     public function index()
     {
-        $tareas = Tarea::all();
-        return response()->json($tareas);
+        try {
+            $tareas = Tarea::all();
+            return response()->json($tareas);
+        } catch (\Exception $e) {
+            Log::error('Error al obtener las tareas: ' . $e->getMessage());
+            return response()->json(['error' => 'No se pudieron obtener las tareas'], 500);
+        }
     }
 
     /**
@@ -23,21 +29,25 @@ class TareaController extends Controller
      */
     public function store(TareaRequest $request)
     {
-        // Verifica qué datos llegan
-        Log::info('Datos recibidos:', $request->all());
+        try {
+            // Log para verificar los datos
+            Log::info('Datos recibidos:', $request->all());
 
-        // Valida los datos
-        $validatedData = $request->validated();
+            // Valida los datos
+            $validatedData = $request->validated();
 
-        // Intenta crear la tarea
-        $tarea = Tarea::create($validatedData);
+            // Intenta crear la tarea
+            $tarea = Tarea::create($validatedData);
 
-        // Verifica si la tarea se creó
-        if (!$tarea) {
+            if (!$tarea) {
+                return response()->json(['error' => 'No se pudo crear la tarea'], 500);
+            }
+
+            return response()->json($tarea, 201);
+        } catch (\Exception $e) {
+            Log::error('Error al crear la tarea: ' . $e->getMessage());
             return response()->json(['error' => 'No se pudo crear la tarea'], 500);
         }
-
-        return response()->json($tarea, 201);
     }
 
     /**
@@ -45,7 +55,15 @@ class TareaController extends Controller
      */
     public function show(Tarea $tarea)
     {
-        return response()->json($tarea);
+        try {
+            return response()->json($tarea);
+        } catch (ModelNotFoundException $e) {
+            Log::error('Tarea no encontrada: ' . $e->getMessage());
+            return response()->json(['error' => 'Tarea no encontrada'], 404);
+        } catch (\Exception $e) {
+            Log::error('Error al obtener la tarea: ' . $e->getMessage());
+            return response()->json(['error' => 'No se pudo obtener la tarea'], 500);
+        }
     }
 
     /**
@@ -53,9 +71,18 @@ class TareaController extends Controller
      */
     public function update(TareaRequest $request, Tarea $tarea)
     {
-        $validatedData = $request->validated();
-        $tarea->update($validatedData);
-        return response()->json($tarea);
+        try {
+            // Validar los datos recibidos
+            $validatedData = $request->validated();
+
+            // Actualizar tarea
+            $tarea->update($validatedData);
+
+            return response()->json($tarea);
+        } catch (\Exception $e) {
+            Log::error('Error al actualizar la tarea: ' . $e->getMessage());
+            return response()->json(['error' => 'No se pudo actualizar la tarea'], 500);
+        }
     }
 
     /**
@@ -63,7 +90,12 @@ class TareaController extends Controller
      */
     public function destroy(Tarea $tarea)
     {
-        $tarea->delete();
-        return response()->json(null, 204);
+        try {
+            $tarea->delete();
+            return response()->json(null, 204);
+        } catch (\Exception $e) {
+            Log::error('Error al eliminar la tarea: ' . $e->getMessage());
+            return response()->json(['error' => 'No se pudo eliminar la tarea'], 500);
+        }
     }
 }
