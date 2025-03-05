@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Tarea;
 use Illuminate\Http\Request;
+use App\Http\Requests\TareaRequest;
 
 class TareaController extends Controller
 {
@@ -11,38 +13,49 @@ class TareaController extends Controller
      */
     public function index()
     {
-        //
+        $tareas = Tarea::all();
+        return response()->json($tareas);
     }
+
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(TareaRequest $request)
     {
-        //
+        $validatedData = $request->validated();
+        $tarea = Tarea::create($validatedData);
+        return response()->json($tarea, 201);
     }
+
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Tarea $tarea)
     {
-        //
+        return response()->json($tarea);
     }
+
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+    public function update(TareaRequest $request, Tarea $tarea)
+{
+    $validatedData = $request->validated();
+    $tarea->update($validatedData);
+    return response()->json($tarea);
+}
+
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Tarea $tarea)
     {
-        //
+        $tarea->delete();
+        return response()->json(null, 204);
     }
+
 }

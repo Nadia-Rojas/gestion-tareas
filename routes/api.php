@@ -15,3 +15,7 @@ Route::apiResource('prioridades', PrioridadController::class);
 Route::apiResource('tareas', TareaController::class);
 Route::apiResource('historial-cambios', HistorialCambioController::class);
 
+Route::get('/tareas', [TareaController::class, 'index']);
+Route::post('/tareas', [TareaController::class, 'store']);
+Route::put('/tareas/{id}', [TareaController::class, 'update']);
+Route::delete('/tareas/{id}', [TareaController::class, 'destroy']);
