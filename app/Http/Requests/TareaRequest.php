@@ -16,8 +16,8 @@ class TareaRequest extends FormRequest
         return [
             'titulo' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
-            'estado_id' => 'required|exists:estados,id',
-            'prioridad_id' => 'required|exists:prioridades,id',
+            'estado_id' => 'required|exists:estado,id',
+            'prioridad_id' => 'required|exists:prioridad,id',
             'creador_id' => 'required|exists:usuarios,id',
         ];
     }

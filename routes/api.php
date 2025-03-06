@@ -10,8 +10,8 @@ use App\Http\Controllers\HistorialCambioController;
 
 Route::apiResource('usuarios', UsuarioController::class);
 Route::apiResource('roles', RolController::class);
-Route::apiResource('estados', EstadoController::class);
-Route::apiResource('prioridades', PrioridadController::class);
+Route::apiResource('estado', EstadoController::class);
+Route::apiResource('prioridad', PrioridadController::class);
 Route::apiResource('tareas', TareaController::class);
 Route::apiResource('historial-cambios', HistorialCambioController::class);
 
