@@ -39,11 +39,14 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
-            // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+           // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+           \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+           'auth:sanctum',
             \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
+
 
     /**
      * The application's middleware aliases.
