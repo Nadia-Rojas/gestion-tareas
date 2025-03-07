@@ -24,6 +24,8 @@ Route::delete('/tareas/{id}', [TareaController::class, 'destroy']);
 Route::post('/tareas/{tareaId}/confirmar-completado', [TareaController::class, 'confirmarCompletado']);
 Route::post('/tareas/{tareaId}/asignar-usuarios', [TareaController::class, 'asignarUsuarios']);
 Route::get('/estado-completado', [TareaController::class, 'obtenerEstadoCompletada']);
+Route::post('/usuarios/{id}/asignar-rol', [UsuarioController::class, 'asignarRol']);
+
 
 
 

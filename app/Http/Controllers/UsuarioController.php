@@ -41,4 +41,23 @@ class UsuarioController extends Controller
         // Retornar una respuesta JSON con el usuario actualizado
         return response()->json($usuario);
     }
+
+
+    public function asignarRol(Request $request, $id)
+    {
+        $usuario = \App\Models\Usuario::findOrFail($id);
+
+        // Validar que se envíe el ID del rol
+        $request->validate([
+            'rol_id' => 'required|exists:roles,id',
+        ]);
+
+        // Asociar el rol al usuario
+        $usuario->roles()->attach($request->rol_id);
+
+        return response()->json(['mensaje' => 'Rol asignado correctamente'], 200);
+    }
+
+
+
 }
