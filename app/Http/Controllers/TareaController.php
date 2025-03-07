@@ -103,44 +103,49 @@ class TareaController extends Controller
      */
     public function confirmarCompletado(Request $request, $tareaId)
     {
-        $user = $request->user();
+        // Obtener el ID del usuario desde el body de la petición
+        $userId = $request->usuario_id;
 
+        if (!$userId) {
+            return response()->json(['error' => 'Usuario no especificado'], 400);
+        }
+
+        // Verificar que el usuario esté asignado a la tarea
         $registro = DB::table('tarea_usuarios')
             ->where('tarea_id', $tareaId)
-            ->where('usuario_id', $user->id)
+            ->where('usuario_id', $userId)
             ->first();
 
         if (!$registro) {
             return response()->json(['error' => 'No estás asignado a esta tarea'], 403);
         }
 
+        // Marcar la tarea como completada para este usuario
         DB::table('tarea_usuarios')
             ->where('tarea_id', $tareaId)
-            ->where('usuario_id', $user->id)
+            ->where('usuario_id', $userId)
             ->update(['completado' => true]);
 
+        // Verificar si todos los usuarios han confirmado completado
         $pendientes = DB::table('tarea_usuarios')
             ->where('tarea_id', $tareaId)
             ->where('completado', false)
             ->count();
 
         if ($pendientes === 0) {
-            try {
-                $estadoCompletada = $this->obtenerEstadoCompletada();
-                Tarea::findOrFail($tareaId)->update(['estado_id' => $estadoCompletada]);
-            } catch (\Exception $e) {
-                Log::error('Error al obtener estado completada: ' . $e->getMessage());
-                return response()->json(['error' => 'No se pudo completar la tarea'], 500);
-            }
+            // Si no hay pendientes, actualizar el estado de la tarea a "completada"
+            $estadoCompletada = $this->obtenerEstadoCompletada();
+            Tarea::findOrFail($tareaId)->update(['estado_id' => $estadoCompletada]);
         }
 
         return response()->json(['mensaje' => 'Confirmación registrada'], 200);
     }
 
+
     /**
      * Obtiene el ID del estado "completada".
      */
-    private function obtenerEstadoCompletada()
+    public  function obtenerEstadoCompletada()
     {
         $estado = \App\Models\Estado::where('descripcion', 'completada')->first();
         if (!$estado) {
