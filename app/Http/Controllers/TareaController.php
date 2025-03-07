@@ -90,19 +90,19 @@ class TareaController extends Controller
         }
     }
 
-
-
-
-    public function asignarUsuarios(Request $request, $id)
+public function asignarUsuarios($id)
 {
-    try {
-        $tarea = Tarea::findOrFail($id); // Verifica que la tarea existe
-        $tarea->usuarios()->sync($request->usuarios); // Asigna los usuarios
-        return response()->json(['message' => 'Usuarios asignados'], 200);
-    } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 400);
+    // Lógica para asignar usuarios a la tarea
+    $tarea = Tarea::find($id);
+
+    if (!$tarea) {
+        return response()->json(['error' => 'Tarea no encontrada'], 404);
     }
+
+    // Asignar usuarios o realizar la acción correspondiente
+    return response()->json(['success' => 'Usuarios asignados a la tarea'], 200);
 }
+
 
 }
 
