@@ -26,6 +26,12 @@ class Usuario extends Authenticatable
     {
         return $this->belongsToMany(Rol::class, 'usuario_roles');
     }
+    public function tareasAsignadas()
+{
+    return $this->belongsToMany(Tarea::class, 'tarea_usuarios', 'usuario_id', 'tarea_id')
+                ->withPivot('completado');
+}
+
 
 }
 

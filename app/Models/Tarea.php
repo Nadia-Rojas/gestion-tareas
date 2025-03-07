@@ -38,4 +38,17 @@ class Tarea extends Model
     {
         return $this->belongsTo(Usuario::class, 'creador_id');
     }
+    public function usuariosAsignados()
+    {
+        return $this->belongsToMany(Usuario::class, 'tarea_usuarios', 'tarea_id', 'usuario_id')
+                    ->withPivot('completado');
+    }
+
+
+
+
+
+
+
+
 }
