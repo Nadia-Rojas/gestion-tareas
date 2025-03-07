@@ -11,6 +11,7 @@ return new class extends Migration {
             $table->foreignId('usuario_id')->constrained('usuarios')->onDelete('cascade');
             $table->boolean('completado')->default(false);
             $table->primary(['tarea_id', 'usuario_id']);
+            $table->timestamps();
         });
     }
 

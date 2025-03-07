@@ -27,28 +27,19 @@ class TareaController extends Controller
     /**
      * Guarda una nueva tarea en la base de datos.
      */
-    public function store(TareaRequest $request)
+    public function store(Request $request)
     {
-        try {
-            // Log para verificar los datos
-            Log::info('Datos recibidos:', $request->all());
+        $tarea = Tarea::create([
+            'titulo' => $request->titulo,
+            'descripcion' => $request->descripcion,
+            'estado_id' => $request->estado_id,
+            'prioridad_id' => $request->prioridad_id,
+            'creador_id' => $request->creador_id,
+        ]);
 
-            // Valida los datos
-            $validatedData = $request->validated();
-
-            // Intenta crear la tarea
-            $tarea = Tarea::create($validatedData);
-
-            if (!$tarea) {
-                return response()->json(['error' => 'No se pudo crear la tarea'], 500);
-            }
-
-            return response()->json($tarea, 201);
-        } catch (\Exception $e) {
-            Log::error('Error al crear la tarea: ' . $e->getMessage());
-            return response()->json(['error' => 'No se pudo crear la tarea'], 500);
-        }
+        return response()->json($tarea, 201);
     }
+
 
     /**
      * Muestra una tarea específica.
@@ -98,4 +89,22 @@ class TareaController extends Controller
             return response()->json(['error' => 'No se pudo eliminar la tarea'], 500);
         }
     }
+
+
+
+
+    public function asignarUsuarios(Request $request, $id)
+{
+    try {
+        $tarea = Tarea::findOrFail($id); // Verifica que la tarea existe
+        $tarea->usuarios()->sync($request->usuarios); // Asigna los usuarios
+        return response()->json(['message' => 'Usuarios asignados'], 200);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 400);
+    }
 }
+
+}
+
+
+
