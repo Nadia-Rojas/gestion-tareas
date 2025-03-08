@@ -6,7 +6,10 @@ use App\Models\Tarea;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+
+
 use App\Http\Requests\TareaRequest;
+use App\Models\Usuario;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class TareaController extends Controller
@@ -87,16 +90,44 @@ class TareaController extends Controller
      */
     public function asignarUsuarios(Request $request, $tareaId)
     {
-        $this->validate($request, [
-            'usuarios' => 'required|array',
-            'usuarios.*' => 'exists:usuarios,id',
-        ]);
+        // Obtener el usuario que realiza la asignación (por ejemplo, usuario con rol 'administrador')
+        $usuarioId = $request->usuario_id; // Este es el ID del usuario que está haciendo la solicitud (Administrador)
 
+        // Verificar si el usuario tiene el rol de 'administrador'
+        $rol = DB::table('usuario_roles')
+            ->join('roles', 'usuario_roles.rol_id', '=', 'roles.id')
+            ->where('usuario_roles.usuario_id', $usuarioId)
+            ->where('roles.descripcion', 'administrador') // Asegúrate de que el rol se llama exactamente 'administrador'
+            ->first();
+
+        if (!$rol) {
+            return response()->json(['error' => 'No tienes permiso para asignar usuarios a esta tarea'], 403);
+        }
+
+        // Obtener los IDs de los usuarios a asignar
+        $usuarios = $request->usuarios; // Un arreglo de IDs de usuarios a asignar
+
+        // Verificar si los usuarios a asignar existen
+        if (is_array($usuarios) && count($usuarios) > 0) {
+            $usuariosExistentes = Usuario::whereIn('id', $usuarios)->get();  // Aquí usamos whereIn correctamente
+            if ($usuariosExistentes->count() !== count($usuarios)) {
+                return response()->json(['error' => 'Algunos usuarios no existen'], 400);
+            }
+        } else {
+            return response()->json(['error' => 'El arreglo de usuarios no es válido'], 400);
+        }
+
+        // Asignar los usuarios a la tarea
         $tarea = Tarea::findOrFail($tareaId);
-        $tarea->usuariosAsignados()->syncWithoutDetaching($request->usuarios);
+        $tarea->usuarios()->sync($usuarios); // Esto asigna múltiples usuarios a la tarea
 
         return response()->json(['mensaje' => 'Usuarios asignados correctamente'], 200);
     }
+
+
+
+
+
 
     /**
      * Confirma que un usuario ha completado una tarea.
