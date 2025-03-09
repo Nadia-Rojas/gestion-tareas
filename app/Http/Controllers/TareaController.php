@@ -19,12 +19,13 @@ class TareaController extends Controller
      */
     public function index(Request $request)
     {
+        // Validar que el user_id esté presente en la solicitud
+        $request->validate([
+            'user_id' => 'required|exists:usuarios,id',
+        ]);
+
         // Obtener el usuario desde el request
         $userId = $request->user_id;
-
-        if (!$userId) {
-            return response()->json(['error' => 'Se requiere el ID de usuario'], 400);
-        }
 
         // Buscar al usuario en la base de datos
         $user = Usuario::find($userId);
@@ -33,10 +34,10 @@ class TareaController extends Controller
             return response()->json(['error' => 'Usuario no encontrado'], 404);
         }
 
-        // Verificar si el usuario es administrador
+        // Verificar si el usuario tiene el rol de administrador
         $esAdmin = $user->roles()->where('descripcion', 'Administrador')->exists();
 
-        // Construir la consulta base
+        // Construir la consulta base para las tareas
         $query = Tarea::with([
             'usuariosAsignados:id,nombre,email',
             'estado:id,descripcion',
@@ -53,6 +54,7 @@ class TareaController extends Controller
         // Obtener las tareas
         $tareas = $query->get();
 
+        // Retornar las tareas en formato JSON
         return response()->json($tareas, 200);
     }
 
