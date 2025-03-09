@@ -51,8 +51,8 @@ class TareaController extends Controller
             });
         }
 
-        // Obtener las tareas
-        $tareas = $query->get();
+        // Agregar paginación con 10 elementos por página (puedes ajustar el número)
+        $tareas = $query->paginate(10);
 
         // Retornar las tareas en formato JSON
         return response()->json($tareas, 200);
