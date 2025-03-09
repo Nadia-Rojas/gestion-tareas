@@ -18,28 +18,44 @@ class TareaController extends Controller
      * Muestra todas las tareas.
      */
     public function index(Request $request)
-{
-    // Obtener el usuario de la sesión o de algún otro método de autenticación
-    $userId = $request->user_id; // O usa session('user_id') si usas sesión
-    $user = Usuario::find($userId);
+    {
+        // Obtener el usuario desde el request
+        $userId = $request->user_id;
 
-    if (!$user) {
-        return response()->json(['error' => 'Usuario no encontrado'], 404);
+        if (!$userId) {
+            return response()->json(['error' => 'Se requiere el ID de usuario'], 400);
+        }
+
+        // Buscar al usuario en la base de datos
+        $user = Usuario::find($userId);
+
+        if (!$user) {
+            return response()->json(['error' => 'Usuario no encontrado'], 404);
+        }
+
+        // Verificar si el usuario es administrador
+        $esAdmin = $user->roles()->where('descripcion', 'Administrador')->exists();
+
+        // Construir la consulta base
+        $query = Tarea::with([
+            'usuariosAsignados:id,nombre,email',
+            'estado:id,descripcion',
+            'prioridad:id,descripcion'
+        ]);
+
+        // Si el usuario no es administrador, solo mostrar sus tareas asignadas
+        if (!$esAdmin) {
+            $query->whereHas('usuariosAsignados', function ($q) use ($user) {
+                $q->where('usuario_id', $user->id);
+            });
+        }
+
+        // Obtener las tareas
+        $tareas = $query->get();
+
+        return response()->json($tareas, 200);
     }
 
-    // Verificar si el usuario tiene el rol de 'Administrador'
-    if ($user->roles()->where('descripcion', 'Administrador')->exists()) {
-        // Obtener todas las tareas con los usuarios asignados
-        $tareas = Tarea::with('usuariosAsignados')->get();
-    } else {
-        // Obtener solo las tareas donde el usuario está asignado
-        $tareas = Tarea::whereHas('usuariosAsignados', function ($q) use ($user) {
-            $q->where('usuario_id', $user->id);
-        })->with('usuariosAsignados')->get();
-    }
-
-    return response()->json($tareas, 200);
-}
 
 
     /**
@@ -67,8 +83,10 @@ class TareaController extends Controller
         try {
             $user = $request->user();
 
-            if (!$user->roles()->where('descripcion', 'Administrador')->exists() &&
-                !$tarea->usuariosAsignados()->where('usuario_id', $user->id)->exists()) {
+            if (
+                !$user->roles()->where('descripcion', 'Administrador')->exists() &&
+                !$tarea->usuariosAsignados()->where('usuario_id', $user->id)->exists()
+            ) {
                 return response()->json(['error' => 'No tienes permisos para editar esta tarea'], 403);
             }
 
@@ -135,42 +153,42 @@ class TareaController extends Controller
     }
 
 
-    public function eliminarUsuarios(Request $request, $tareaId) 
+    public function eliminarUsuarios(Request $request, $tareaId)
     {
         // Obtener el usuario que realiza la acción
         $usuario = Usuario::find($request->usuario_id);
-    
+
         // Verificar si el usuario existe
         if (!$usuario) {
             return response()->json(['error' => 'Usuario no encontrado'], 404);
         }
-    
+
         // Verificar si el usuario tiene el rol de 'administrador'
         $esAdmin = $usuario->roles()->where('descripcion', 'administrador')->exists();
-    
+
         if (!$esAdmin) {
             return response()->json(['error' => 'No tienes permiso para eliminar usuarios de esta tarea'], 403);
         }
-    
+
         // Validar que los usuarios a eliminar sean un array
         if (!is_array($request->usuarios) || empty($request->usuarios)) {
             return response()->json(['error' => 'Lista de usuarios no válida'], 400);
         }
-    
+
         // Obtener la tarea y validar que exista
         $tarea = Tarea::find($tareaId);
         if (!$tarea) {
             return response()->json(['error' => 'Tarea no encontrada'], 404);
         }
-    
+
         // Eliminar los usuarios de la tarea
         $tarea->usuarios()->detach($request->usuarios);
-    
+
         return response()->json(['mensaje' => 'Usuarios eliminados correctamente'], 200);
     }
-    
-    
-    
+
+
+
 
 
 

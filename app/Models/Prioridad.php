@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Prioridad extends Model
 {
+
+    protected $table = 'prioridad';
     protected $fillable = ['descripcion'];
 
     // Relación uno a muchos con Tarea
