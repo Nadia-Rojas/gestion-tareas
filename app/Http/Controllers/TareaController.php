@@ -63,11 +63,32 @@ class TareaController extends Controller
     /**
      * Guarda una nueva tarea en la base de datos.
      */
+    /**
+     * Guarda una nueva tarea en la base de datos.
+     */
+    /**
+     * Guarda una nueva tarea en la base de datos.
+     */
     public function store(TareaRequest $request)
     {
-        $tarea = Tarea::create($request->validated());
+        // Validar que creador_id esté presente en la solicitud y exista en la tabla usuarios
+        $request->validate([
+            'creador_id' => 'required|exists:usuarios,id',
+        ]);
+
+        // Obtener los datos validados del request (incluyendo creador_id)
+        $data = $request->validated();
+
+        // Crear la tarea con los datos validados
+        $tarea = Tarea::create($data);
+
+        // Asignar automáticamente al creador en la tabla pivote
+        $tarea->usuariosAsignados()->attach($request->creador_id);
+
+        // Retornar la tarea creada en formato JSON
         return response()->json($tarea, 201);
     }
+
 
     /**
      * Muestra una tarea específica.

@@ -16,7 +16,7 @@ class Tarea extends Model
     // Relación muchos a muchos con Usuario
     public function usuarios()
     {
-        return $this->belongsToMany(Usuario::class, 'tarea_usuarios') // Especificamos la tabla pivote
+        return $this->belongsToMany(Usuario::class, 'tarea_usuarios', 'tarea_id', 'usuario_id') // Especificamos la tabla pivote
                     ->withPivot('completado') // Si la tabla pivote tiene otros campos
                     ->withTimestamps(); // Si quieres que se guarden las fechas de creación/actualización
 
