@@ -93,9 +93,36 @@ class TareaController extends Controller
     /**
      * Muestra una tarea específica.
      */
-    public function show(Tarea $tarea)
+    public function show(Request $request, Tarea $tarea)
     {
-        return response()->json($tarea);
+        // Validar que se envíe el user_id y que exista en la tabla usuarios
+        $request->validate([
+            'user_id' => 'required|exists:usuarios,id',
+        ]);
+
+        // Obtener el usuario
+        $user = Usuario::find($request->user_id);
+        if (!$user) {
+            return response()->json(['error' => 'Usuario no encontrado'], 404);
+        }
+
+        // Verificar si es administrador
+        $esAdmin = $user->roles()->where('descripcion', 'Administrador')->exists();
+
+        // Si NO es admin y NO está asignado a la tarea, no puede verla
+        if (!$esAdmin && !$tarea->usuariosAsignados()->where('usuario_id', $user->id)->exists()) {
+            return response()->json(['error' => 'No tienes permiso para ver esta tarea'], 403);
+        }
+
+        // Cargar relaciones para mostrar info completa de la tarea
+        $tarea->load([
+            'usuariosAsignados:id,nombre,email',
+            'estado:id,descripcion',
+            'prioridad:id,descripcion'
+        ]);
+
+        // Retornar la tarea con sus relaciones
+        return response()->json($tarea, 200);
     }
 
     /**
