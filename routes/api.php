@@ -24,6 +24,8 @@ Route::get('/estado-completado', [TareaController::class, 'obtenerEstadoCompleta
 
 // Rutas adicionales de usuarios
 Route::post('/usuarios/{id}/asignar-rol', [UsuarioController::class, 'asignarRol']);
+Route::put('tareas/{tarea}', [TareaController::class, 'update']);
+
 
 
 

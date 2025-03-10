@@ -60,12 +60,7 @@ class TareaController extends Controller
 
 
 
-    /**
-     * Guarda una nueva tarea en la base de datos.
-     */
-    /**
-     * Guarda una nueva tarea en la base de datos.
-     */
+
     /**
      * Guarda una nueva tarea en la base de datos.
      */
@@ -128,26 +123,72 @@ class TareaController extends Controller
     /**
      * Actualiza una tarea existente.
      */
-    public function update(TareaRequest $request, Tarea $tarea)
+    public function update(Request $request, Tarea $tarea)
     {
         try {
-            $user = $request->user();
+            // Validar si el ID de usuario se pasa en la solicitud
+            $usuarioId = $request->input('usuario_id');
 
-            if (
-                !$user->roles()->where('descripcion', 'Administrador')->exists() &&
-                !$tarea->usuariosAsignados()->where('usuario_id', $user->id)->exists()
-            ) {
+            if (!$usuarioId) {
+                return response()->json(['error' => 'No se proporcionó el ID de usuario'], 400);
+            }
+
+            // Validar si la tarea existe
+            if (!$tarea) {
+                return response()->json(['error' => 'Tarea no encontrada'], 404);
+            }
+
+            // Comprobar si el usuario tiene permisos para editar la tarea
+            $tareaUserAssigned = $tarea->usuariosAsignados()->where('usuario_id', $usuarioId)->exists();
+            $isAdmin = $this->isUserAdmin($usuarioId);
+
+            if (!$isAdmin && !$tareaUserAssigned) {
                 return response()->json(['error' => 'No tienes permisos para editar esta tarea'], 403);
             }
 
-            $tarea->update($request->validated());
+            // Actualizar los datos de la tarea
+            $tarea->titulo = $request->input('titulo');
+            $tarea->descripcion = $request->input('descripcion');
+            $tarea->estado_id = $request->input('estado_id');
+            $tarea->prioridad_id = $request->input('prioridad_id');
 
-            return response()->json($tarea);
+            // Guardar la tarea
+            if ($tarea->save()) {
+                return response()->json([
+                    'message' => 'Tarea actualizada correctamente',
+                    'tarea' => $tarea
+                ], 200);
+            } else {
+                return response()->json(['error' => 'No se pudo guardar la tarea'], 500);
+            }
+
         } catch (\Exception $e) {
             Log::error('Error al actualizar la tarea: ' . $e->getMessage());
             return response()->json(['error' => 'No se pudo actualizar la tarea'], 500);
         }
     }
+
+    private function isUserAdmin($userId)
+    {
+        $user = \App\Models\Usuario::find($userId);
+        if (!$user) {
+            return false;
+        }
+        // Verifica si el usuario tiene el rol de "Administrador"
+        return $user->roles()->where('descripcion', 'Administrador')->exists();
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 
     /**
      * Elimina una tarea.
