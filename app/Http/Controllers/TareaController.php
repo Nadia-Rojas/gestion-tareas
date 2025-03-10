@@ -193,55 +193,65 @@ class TareaController extends Controller
     /**
      * Elimina una tarea.
      */
-    public function destroy(Tarea $tarea)
-    {
-        try {
-            $tarea->delete();
-            return response()->json(null, 204);
-        } catch (\Exception $e) {
-            Log::error('Error al eliminar la tarea: ' . $e->getMessage());
-            return response()->json(['error' => 'No se pudo eliminar la tarea'], 500);
+    public function destroy(Request $request, Tarea $tarea)
+{
+    try {
+        // Obtener el usuario autenticado
+        $usuario = Usuario::find($request->usuario_id);
+
+        // Verificar si el usuario tiene el rol de 'administrador'
+        if (!$usuario || !$usuario->roles()->where('descripcion', 'administrador')->exists()) {
+            return response()->json(['error' => 'No tienes permiso para eliminar tareas'], 403);
         }
+
+        // Eliminar la tarea
+        $tarea->delete();
+        return response()->json(null, 204);
+    } catch (\Exception $e) {
+        Log::error('Error al eliminar la tarea: ' . $e->getMessage());
+        return response()->json(['error' => 'No se pudo eliminar la tarea'], 500);
     }
+}
+
+
 
     /**
      * Asigna usuarios a una tarea.
      */
     public function asignarUsuarios(Request $request, $tareaId)
     {
-        // Obtener el usuario que realiza la asignación (por ejemplo, usuario con rol 'administrador')
-        $usuarioId = $request->usuario_id; // Este es el ID del usuario que está haciendo la solicitud (Administrador)
-
-        // Verificar si el usuario tiene el rol de 'administrador'
-        $rol = DB::table('usuario_roles')
+        // Verificar si el usuario que hace la solicitud es administrador
+        $usuarioAdmin = Usuario::findOrFail($request->usuario_id);
+        $esAdmin = DB::table('usuario_roles')
             ->join('roles', 'usuario_roles.rol_id', '=', 'roles.id')
-            ->where('usuario_roles.usuario_id', $usuarioId)
-            ->where('roles.descripcion', 'administrador') // Asegúrate de que el rol se llama exactamente 'administrador'
-            ->first();
+            ->where('usuario_roles.usuario_id', $usuarioAdmin->id)
+            ->where('roles.descripcion', 'administrador')
+            ->exists();
 
-        if (!$rol) {
-            return response()->json(['error' => 'No tienes permiso para asignar usuarios a esta tarea'], 403);
-        }
+        abort_unless($esAdmin, 403, 'No tienes permiso para asignar usuarios a esta tarea');
 
-        // Obtener los IDs de los usuarios a asignar
-        $usuarios = $request->usuarios; // Un arreglo de IDs de usuarios a asignar
-
-        // Verificar si los usuarios a asignar existen
-        if (is_array($usuarios) && count($usuarios) > 0) {
-            $usuariosExistentes = Usuario::whereIn('id', $usuarios)->get();  // Aquí usamos whereIn correctamente
-            if ($usuariosExistentes->count() !== count($usuarios)) {
-                return response()->json(['error' => 'Algunos usuarios no existen'], 400);
-            }
-        } else {
-            return response()->json(['error' => 'El arreglo de usuarios no es válido'], 400);
-        }
-
-        // Asignar los usuarios a la tarea
+        // Buscar la tarea
         $tarea = Tarea::findOrFail($tareaId);
-        $tarea->usuarios()->sync($usuarios); // Esto asigna múltiples usuarios a la tarea
+
+        // Validar que los usuarios sean un array y no estén vacíos
+        $usuarios = $request->input('usuarios');
+        if (!is_array($usuarios) || empty($usuarios)) {
+            abort(400, 'El arreglo de usuarios no es válido');
+        }
+
+        // Verificar que todos los usuarios existen
+        $usuariosExistentes = Usuario::whereIn('id', $usuarios)->pluck('id')->toArray();
+        if (count($usuariosExistentes) !== count($usuarios)) {
+            abort(400, 'Algunos usuarios no existen');
+        }
+
+        // Asignar usuarios a la tarea
+        $tarea->usuarios()->sync($usuarios);
 
         return response()->json(['mensaje' => 'Usuarios asignados correctamente'], 200);
     }
+
+
 
 
     public function eliminarUsuarios(Request $request, $tareaId)
