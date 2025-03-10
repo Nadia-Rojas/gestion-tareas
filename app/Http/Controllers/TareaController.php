@@ -184,12 +184,6 @@ class TareaController extends Controller
 
 
 
-
-
-
-
-
-
     /**
      * Elimina una tarea.
      */
@@ -252,54 +246,6 @@ class TareaController extends Controller
     }
 
 
-
-
-    public function eliminarUsuarios(Request $request, $tareaId)
-    {
-        // Obtener el usuario que realiza la acción
-        $usuario = Usuario::find($request->usuario_id);
-
-        // Verificar si el usuario existe
-        if (!$usuario) {
-            return response()->json(['error' => 'Usuario no encontrado'], 404);
-        }
-
-        // Verificar si el usuario tiene el rol de 'administrador'
-        $esAdmin = $usuario->roles()->where('descripcion', 'administrador')->exists();
-
-        if (!$esAdmin) {
-            return response()->json(['error' => 'No tienes permiso para eliminar usuarios de esta tarea'], 403);
-        }
-
-        // Validar que los usuarios a eliminar sean un array
-        if (!is_array($request->usuarios) || empty($request->usuarios)) {
-            return response()->json(['error' => 'Lista de usuarios no válida'], 400);
-        }
-
-        // Obtener la tarea y validar que exista
-        $tarea = Tarea::find($tareaId);
-        if (!$tarea) {
-            return response()->json(['error' => 'Tarea no encontrada'], 404);
-        }
-
-        // Eliminar los usuarios de la tarea
-        $tarea->usuarios()->detach($request->usuarios);
-
-        return response()->json(['mensaje' => 'Usuarios eliminados correctamente'], 200);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
     /**
      * Confirma que un usuario ha completado una tarea.
      */
@@ -355,4 +301,46 @@ class TareaController extends Controller
         }
         return $estado->id;
     }
+
+
+
+
+    /**
+ * Elimina un usuario asignado a una tarea.
+ */
+public function eliminarUsuarios(Request $request, $tareaId)
+{
+    // Validar que el usuario que hace la solicitud exista
+    $usuarioAdmin = Usuario::findOrFail($request->usuario_id);
+
+    // Verificar si el usuario es administrador
+    $esAdmin = DB::table('usuario_roles')
+        ->where('id_usuario', $usuarioAdmin->id)
+        ->whereIn('id_rol', function ($query) {
+            $query->select('id')->from('roles')->where('descripcion', 'administrador');
+        })
+        ->exists();
+
+    abort_unless($esAdmin, 403, 'No tienes permiso para eliminar usuarios de esta tarea');
+
+    // Buscar la tarea
+    $tarea = Tarea::findOrFail($tareaId);
+
+    // Validar que se reciba una lista de usuarios en el request
+    $usuarios = $request->input('usuarios');
+    if (!is_array($usuarios) || empty($usuarios)) {
+        abort(400, 'Lista de usuarios no válida');
+    }
+
+    // Eliminar directamente los usuarios de la tarea usando detach()
+    $tarea->usuarios()->detach($usuarios);
+
+    return response()->json(['mensaje' => 'Usuarios eliminados correctamente'], 200);
 }
+
+
+
+}
+
+
+

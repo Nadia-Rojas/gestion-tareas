@@ -19,8 +19,10 @@ Route::apiResource('historial-cambios', HistorialCambioController::class);
 // Rutas adicionales de tareas
 Route::post('/tareas/{tareaId}/confirmar-completado', [TareaController::class, 'confirmarCompletado']);
 Route::post('/tareas/{tareaId}/asignar-usuarios', [TareaController::class, 'asignarUsuarios']);
-Route::post('/tareas/{tareaId}/eliminar-usuarios', [TareaController::class, 'eliminarUsuarios']);
+//Route::post('/tareas/{tareaId}/eliminar-usuarios', [TareaController::class, 'eliminarUsuarios']);
 Route::get('/estado-completado', [TareaController::class, 'obtenerEstadoCompletada']);
+Route::delete('/tareas/{tareaId}/usuarios/{usuarioId}', [TareaController::class, 'eliminarUsuarioDeTarea']);
+
 
 // Rutas adicionales de usuarios
 Route::post('/usuarios/{id}/asignar-rol', [UsuarioController::class, 'asignarRol']);
